@@ -51,7 +51,7 @@ class App:
             getattr(self, field['name']).delete(0, END)
         # Create a Record object with the field values and add it to the records list
         record = Record(**record_data)
-        self.records.append(record)
+        self.records.append(record)  # add the record to the list
 
     def exit_app(self):
         output_file = self.load_output_file_from_config()
@@ -82,14 +82,16 @@ class App:
         try:
             with open(db_file, 'w+'):
                 conn = sqlite3.connect(db_file)
-            c = conn.cursor()
-            # Create table if it does not exist
-            c.execute(f"CREATE TABLE IF NOT EXISTS {table_name} ({','.join([field['name'] + ' TEXT' for field in self.fields])})")
-            # Insert records
-            for record in self.records:
-                values = tuple(getattr(record, field['name']) for field in self.fields)
-                c.execute(f"INSERT INTO {table_name} VALUES ({','.join(['?' for field in self.fields])})", values)
-            conn.commit()
+                c = conn.cursor()
+                # Create table if it does not exist
+                field_names = [field['name'] + ' TEXT' for field in self.fields]
+                field_names_str = ','.join(field_names)
+                c.execute(f"CREATE TABLE IF NOT EXISTS {table_name} ({field_names_str})")
+                # Insert records
+                for record in self.records:
+                    values = tuple(getattr(record, field['name']) for field in self.fields)
+                    c.execute(f"INSERT INTO {table_name} VALUES ({','.join(['?' for field in self.fields])})", values)
+                    conn.commit()
         except Exception as e:
             print(f"Error writing to database: {e}")
         finally:
